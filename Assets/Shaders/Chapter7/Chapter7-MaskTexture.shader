@@ -1,9 +1,12 @@
-﻿Shader "Unity Shaders Book/Chapter 7/Mask Texture" {
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Unity Shaders Book/Chapter 7/Mask Texture" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
 		_BumpMap ("Normal Map", 2D) = "bump" {}
 		_BumpScale("Bump Scale", Float) = 1.0
+		//遮罩纹理
 		_SpecularMask ("Specular Mask", 2D) = "white" {}
 		_SpecularScale ("Specular Scale", Float) = 1.0
 		_Specular ("Specular", Color) = (1, 1, 1, 1)
@@ -46,11 +49,12 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.uv.xy = v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 				
 				TANGENT_SPACE_ROTATION;
+				//切线空间下
 				o.lightDir = mul(rotation, ObjSpaceLightDir(v.vertex)).xyz;
 				o.viewDir = mul(rotation, ObjSpaceViewDir(v.vertex)).xyz;
 				
@@ -73,6 +77,9 @@
 				
 			 	fixed3 halfDir = normalize(tangentLightDir + tangentViewDir);
 			 	// Get the mask value
+				//遮罩纹理中每个纹素的rgb分量其实都是一样的，表明了该点对应的高光反射强度
+				//，在这里我们选择使用r分量来计算掩码值
+				//得到的掩码值和_SpecularScale相乘，一起来控制高光反射的强度
 			 	fixed specularMask = tex2D(_SpecularMask, i.uv).r * _SpecularScale;
 			 	// Compute specular term with the specular mask
 			 	fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(tangentNormal, halfDir)), _Gloss) * specularMask;

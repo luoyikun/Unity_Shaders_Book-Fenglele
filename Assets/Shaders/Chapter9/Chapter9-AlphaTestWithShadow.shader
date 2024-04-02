@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 9/Alpha Test With Shadow" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//透明度测试产生阴影，立方体镂空，阴影投射
+Shader "Unity Shaders Book/Chapter 9/Alpha Test With Shadow" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
@@ -38,20 +41,22 @@
 				float3 worldNormal : TEXCOORD0;
 				float3 worldPos : TEXCOORD1;
 				float2 uv : TEXCOORD2;
+				// 由于使用了0,1,2，插值寄存器。这里使用3
 				SHADOW_COORDS(3)
 			};
 			
 			v2f vert(a2v v) {
 			 	v2f o;
-			 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+			 	o.pos = UnityObjectToClipPos(v.vertex);
 			 	
 			 	o.worldNormal = UnityObjectToWorldNormal(v.normal);
 			 	
-			 	o.worldPos = mul(_Object2World, v.vertex).xyz;
+			 	o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 
 			 	o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 			 	
 			 	// Pass shadow coordinates to pixel shader
+				//在顶点着色器中使用内置宏TRANSFER_SHADOW 计算阴影纹理坐标后传递给片元着色器
 			 	TRANSFER_SHADOW(o);
 			 	
 			 	return o;
@@ -80,5 +85,6 @@
 			ENDCG
 		}
 	} 
+	//要提供一个有透明度测试功能的ShadowCaster Pass ,需要一个_Cutoff的属性
 	FallBack "Transparent/Cutout/VertexLit"
 }

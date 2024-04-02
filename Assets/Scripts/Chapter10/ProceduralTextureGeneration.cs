@@ -2,10 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//为了让该脚本能够在编辑器模式下运行
 [ExecuteInEditMode]
 public class ProceduralTextureGeneration : MonoBehaviour {
-
-	public Material material = null;
+    //材质将使用该脚本中生成的程序纹理
+    public Material material = null;
 
 	#region Material properties
 	[SerializeField, SetProperty("textureWidth")]
@@ -43,8 +44,8 @@ public class ProceduralTextureGeneration : MonoBehaviour {
 			_UpdateMaterial();
 		}
 	}
-
-	[SerializeField, SetProperty("blurFactor")]
+    //模糊因子，用来模糊圆形边界的
+    [SerializeField, SetProperty("blurFactor")]
 	private float m_blurFactor = 2.0f;
 	public float blurFactor {
 		get {
@@ -55,9 +56,9 @@ public class ProceduralTextureGeneration : MonoBehaviour {
 			_UpdateMaterial();
 		}
 	}
-	#endregion
-
-	private Texture2D m_generatedTexture = null;
+    #endregion
+    //保存生成的程序纹理
+    private Texture2D m_generatedTexture = null;
 
 	// Use this for initialization
 	void Start () {
@@ -94,6 +95,7 @@ public class ProceduralTextureGeneration : MonoBehaviour {
 		Texture2D proceduralTexture = new Texture2D(textureWidth, textureWidth);
 
 		// The interval between circles
+        //定义圆与圆之间的间距
 		float circleInterval = textureWidth / 4.0f;
 		// The radius of circles
 		float radius = textureWidth / 10.0f;

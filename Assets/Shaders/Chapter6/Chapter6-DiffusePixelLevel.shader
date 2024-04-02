@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 6/Diffuse Pixel-Level" {
+﻿// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//逐像素漫反射
+Shader "Unity Shaders Book/Chapter 6/Diffuse Pixel-Level" {
 	Properties {
 		_Diffuse ("Diffuse", Color) = (1, 1, 1, 1)
 	}
@@ -21,17 +24,17 @@
 			};
 			
 			struct v2f {
-				float4 pos : SV_POSITION;
-				float3 worldNormal : TEXCOORD0;
+				float4 pos : SV_POSITION; //投影（裁剪）空间下坐标
+				float3 worldNormal : TEXCOORD0;//世界坐标下法线
 			};
 			
 			v2f vert(a2v v) {
 				v2f o;
 				// Transform the vertex from object space to projection space
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 
 				// Transform the normal from object space to world space
-				o.worldNormal = mul(v.normal, (float3x3)_World2Object);
+				o.worldNormal = mul(v.normal, (float3x3)unity_WorldToObject);
 
 				return o;
 			}

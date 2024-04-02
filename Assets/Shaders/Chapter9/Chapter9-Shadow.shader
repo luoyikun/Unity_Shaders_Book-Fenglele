@@ -1,4 +1,8 @@
-﻿Shader "Unity Shaders Book/Chapter 9/Shadow" {
+﻿// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//阴影
+Shader "Unity Shaders Book/Chapter 9/Shadow" {
 	Properties {
 		_Diffuse ("Diffuse", Color) = (1, 1, 1, 1)
 		_Specular ("Specular", Color) = (1, 1, 1, 1)
@@ -21,6 +25,7 @@
 			
 			// Need these files to get built-in macros
 			#include "Lighting.cginc"
+			//计算阴影的宏都在此文件
 			#include "AutoLight.cginc"
 			
 			fixed4 _Diffuse;
@@ -36,18 +41,22 @@
 				float4 pos : SV_POSITION;
 				float3 worldNormal : TEXCOORD0;
 				float3 worldPos : TEXCOORD1;
-				SHADOW_COORDS(2)
+				//声明一个用于对阴影纹理采样的坐标
+				//参数需要是下一个可用的插值寄存器的索引值
+				//上面用了0，1。所以这里是2
+				SHADOW_COORDS(2) 
 			};
 			
 			v2f vert(a2v v) {
 			 	v2f o;
-			 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+			 	o.pos = UnityObjectToClipPos(v.vertex);
 			 	
 			 	o.worldNormal = UnityObjectToWorldNormal(v.normal);
 
-			 	o.worldPos = mul(_Object2World, v.vertex).xyz;
+			 	o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 			 	
 			 	// Pass shadow coordinates to pixel shader
+				//计算阴影纹理坐标
 			 	TRANSFER_SHADOW(o);
 			 	
 			 	return o;
@@ -66,7 +75,7 @@
 			 	fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(worldNormal, halfDir)), _Gloss);
 
 				fixed atten = 1.0;
-				
+				//阴影衰减
 				fixed shadow = SHADOW_ATTENUATION(i);
 				
 				return fixed4(ambient + (diffuse + specular) * atten * shadow, 1.0);
@@ -111,11 +120,11 @@
 			
 			v2f vert(a2v v) {
 			 	v2f o;
-			 	o.position = mul(UNITY_MATRIX_MVP, v.vertex);
+			 	o.position = UnityObjectToClipPos(v.vertex);
 			 	
 			 	o.worldNormal = UnityObjectToWorldNormal(v.normal);
 			 	
-			 	o.worldPos = mul(_Object2World, v.vertex).xyz;
+			 	o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 			 	
 			 	return o;
 			}
@@ -137,7 +146,7 @@
 				#ifdef USING_DIRECTIONAL_LIGHT
 					fixed atten = 1.0;
 				#else
-					float3 lightCoord = mul(_LightMatrix0, float4(i.worldPos, 1)).xyz;
+					float3 lightCoord = mul(unity_WorldToLight, float4(i.worldPos, 1)).xyz;
 					fixed atten = tex2D(_LightTexture0, dot(lightCoord, lightCoord).rr).UNITY_ATTEN_CHANNEL;
 				#endif
 			 	

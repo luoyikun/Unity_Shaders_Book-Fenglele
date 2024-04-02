@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 8/Alpha Blend With Both Side" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//透明度混合双面渲染
+Shader "Unity Shaders Book/Chapter 8/Alpha Blend With Both Side" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
@@ -6,11 +9,12 @@
 	}
 	SubShader {
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		
+		//shader执行Pass的顺序是从上到下
 		Pass {
 			Tags { "LightMode"="ForwardBase" }
 			
 			// First pass renders only back faces 
+			//第一个Pass只渲染背面
 			Cull Front
 			
 			ZWrite Off
@@ -43,11 +47,11 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 				
@@ -76,6 +80,7 @@
 			Tags { "LightMode"="ForwardBase" }
 			
 			// Second pass renders only front faces 
+			//第二个Pass只渲染正面
 			Cull Back
 			
 			ZWrite Off
@@ -108,11 +113,11 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 				

@@ -1,16 +1,26 @@
-﻿Shader "Unity Shaders Book/Chapter 8/Alpha Blend" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//透明度混合
+Shader "Unity Shaders Book/Chapter 8/Alpha Blend" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
 		_AlphaScale ("Alpha Scale", Range(0, 1)) = 1
 	}
 	SubShader {
+		//渲染队列是名为Transparent的队列
+		//RenderType标签可以让Unity把这个Shader归入到提前定义的组（这里就是Transparent组）
+		//IgnoreProjector设置为True，这意味着这个Shader不会受到投影器（Projectors）的影响
+		//使用了透明度混合的Shader都应该在SubShader中设置这3个标签
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
 		
 		Pass {
 			Tags { "LightMode"="ForwardBase" }
 
+			//深度写入关闭，不会写入到深度缓冲区
 			ZWrite Off
+			//源颜色（该片元着色器产生的颜色）的混合因子设为SrcAlpha，
+			//把目标颜色（已经存在于颜色缓冲中的颜色）的混合因子设为OneMinusSrcAlpha，以得到合适的半透明效果
 			Blend SrcAlpha OneMinusSrcAlpha
 			
 			CGPROGRAM
@@ -40,11 +50,11 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 				
@@ -62,7 +72,7 @@
 				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * albedo;
 				
 				fixed3 diffuse = _LightColor0.rgb * albedo * max(0, dot(worldNormal, worldLightDir));
-				
+				//修改透明通道
 				return fixed4(ambient + diffuse, texColor.a * _AlphaScale);
 			}
 			

@@ -1,6 +1,10 @@
-﻿Shader "Unity Shaders Book/Chapter 10/Fresnel" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//菲涅耳反射，部分反射，部分折射
+Shader "Unity Shaders Book/Chapter 10/Fresnel" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
+		//菲涅耳反射系数
 		_FresnelScale ("Fresnel Scale", Range(0, 1)) = 0.5
 		_Cubemap ("Reflection Cubemap", Cube) = "_Skybox" {}
 	}
@@ -40,11 +44,11 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				o.worldViewDir = UnityWorldSpaceViewDir(o.worldPos);
 				

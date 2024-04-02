@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 9/Attenuation And Shadow Use Build-in Functions" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//光照衰减与阴影
+Shader "Unity Shaders Book/Chapter 9/Attenuation And Shadow Use Build-in Functions" {
 	Properties {
 		_Diffuse ("Diffuse", Color) = (1, 1, 1, 1)
 		_Specular ("Specular", Color) = (1, 1, 1, 1)
@@ -21,6 +24,7 @@
 			
 			// Need these files to get built-in macros
 			#include "Lighting.cginc"
+			//
 			#include "AutoLight.cginc"
 			
 			fixed4 _Diffuse;
@@ -36,16 +40,16 @@
 				float4 pos : SV_POSITION;
 				float3 worldNormal : TEXCOORD0;
 				float3 worldPos : TEXCOORD1;
-				SHADOW_COORDS(2)
+				SHADOW_COORDS(2) //阴影坐标
 			};
 			
 			v2f vert(a2v v) {
 			 	v2f o;
-			 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+			 	o.pos = UnityObjectToClipPos(v.vertex);
 			 	
 			 	o.worldNormal = UnityObjectToWorldNormal(v.normal);
 			 	
-			 	o.worldPos = mul(_Object2World, v.vertex).xyz;
+			 	o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 			 	
 			 	// Pass shadow coordinates to pixel shader
 			 	TRANSFER_SHADOW(o);
@@ -66,8 +70,10 @@
 			 	fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(worldNormal, halfDir)), _Gloss);
 
 				// UNITY_LIGHT_ATTENUATION not only compute attenuation, but also shadow infos
+				//光照衰减和阴影
 				UNITY_LIGHT_ATTENUATION(atten, i, i.worldPos);
 				
+				//最后输出颜色，需要加上环境光
 				return fixed4(ambient + (diffuse + specular) * atten, 1.0);
 			}
 			
@@ -106,16 +112,16 @@
 				float4 pos : SV_POSITION;
 				float3 worldNormal : TEXCOORD0;
 				float3 worldPos : TEXCOORD1;
-				SHADOW_COORDS(2)
+				SHADOW_COORDS(2)//阴影坐标
 			};
 			
 			v2f vert(a2v v) {
 			 	v2f o;
-			 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+			 	o.pos = UnityObjectToClipPos(v.vertex);
 			 	
 			 	o.worldNormal = UnityObjectToWorldNormal(v.normal);
 			 	
-			 	o.worldPos = mul(_Object2World, v.vertex).xyz;
+			 	o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 			 	
 			 	// Pass shadow coordinates to pixel shader
 			 	TRANSFER_SHADOW(o);
@@ -134,6 +140,7 @@
 			 	fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(worldNormal, halfDir)), _Gloss);
 
 				// UNITY_LIGHT_ATTENUATION not only compute attenuation, but also shadow infos
+				////光照衰减和阴影
 				UNITY_LIGHT_ATTENUATION(atten, i, i.worldPos);
 			 	
 				return fixed4((diffuse + specular) * atten, 1.0);

@@ -26,15 +26,15 @@ public class ColorPicker : MonoBehaviour {
 			return;
 		}
 
-		// Attach a BoxCollider to this camera
-		// In order to receive mouse events
-		if (pickerCollider == null) {
-			pickerCollider = gameObject.AddComponent<BoxCollider>();
-			// Make sure the collider is in the camera's frustum
-			pickerCollider.center = Vector3.zero;
-			pickerCollider.center += m_camera.transform.worldToLocalMatrix.MultiplyVector(m_camera.transform.forward) * (m_camera.nearClipPlane + 0.2f);
-			pickerCollider.size = new Vector3(Screen.width, Screen.height, 0.1f);
-		}
+		//// Attach a BoxCollider to this camera
+		//// In order to receive mouse events
+		//if (pickerCollider == null) {
+		//	pickerCollider = gameObject.AddComponent<BoxCollider>();
+		//	// Make sure the collider is in the camera's frustum
+		//	pickerCollider.center = Vector3.zero;
+		//	pickerCollider.center += m_camera.transform.worldToLocalMatrix.MultiplyVector(m_camera.transform.forward) * (m_camera.nearClipPlane + 0.2f);
+		//	pickerCollider.size = new Vector3(Screen.width, Screen.height, 0.1f);
+		//}
 	}
 
 	// Draw the color we picked
@@ -68,15 +68,27 @@ public class ColorPicker : MonoBehaviour {
 			m_screenRenderTexture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
 			m_screenRenderTexture.Apply();
 			m_pickedColor = m_screenRenderTexture.GetPixel(Mathf.FloorToInt(m_pixelPosition.x), Mathf.FloorToInt(m_pixelPosition.y));
+            m_pickedColor.a = 1;
+            Debug.Log(m_pickedColor);
 			m_grab = false;
 		}
 	}
-	
-	void OnMouseDown() {
-		m_grab = true;
-		// Record the mouse position to pick pixel
-		m_pixelPosition = Input.mousePosition;
-	}
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            m_grab = true;
+            // Record the mouse position to pick pixel
+            m_pixelPosition = Input.mousePosition;
+        }
+    }
+
+ //   void OnMouseDown() {
+	//	m_grab = true;
+	//	// Record the mouse position to pick pixel
+	//	m_pixelPosition = Input.mousePosition;
+	//}
 
 	void OnGUI() {
 		GUI.Box(new Rect(0, 0, 120, 200), "Color Picker");

@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 8/Alpha Blending With ZWrite" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//开启深度写入的半透明效果
+Shader "Unity Shaders Book/Chapter 8/Alpha Blending With ZWrite" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
@@ -9,7 +12,11 @@
 		
 		// Extra pass that renders to depth buffer only
 		Pass {
+			//模型的深度信息写入深度缓冲中，从而剔除模型中被自身遮挡的片元
 			ZWrite On
+			//ColorMask用于设置颜色通道的写掩码（write mask）
+			//ColorMask RGB | A | 0 | 其他任何R、G、B、A的组合
+			//当ColorMask设为0时，意味着该Pass不写入任何颜色通道，即不会输出任何颜色
 			ColorMask 0
 		}
 		
@@ -46,11 +53,11 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 				

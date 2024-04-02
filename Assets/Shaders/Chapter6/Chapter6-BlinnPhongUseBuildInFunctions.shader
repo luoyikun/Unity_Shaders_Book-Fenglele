@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 6/Blinn-Phong Use Built-in Functions" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Unity Shaders Book/Chapter 6/Blinn-Phong Use Built-in Functions" {
 	Properties {
 		_Diffuse ("Diffuse", Color) = (1, 1, 1, 1)
 		_Specular ("Specular", Color) = (1, 1, 1, 1)
@@ -26,18 +29,18 @@
 			
 			struct v2f {
 				float4 pos : SV_POSITION;
-				float3 worldNormal : TEXCOORD0;
-				float4 worldPos : TEXCOORD1;
+				float3 worldNormal : TEXCOORD0; //TEXCOORD0 为计算结果的存储，可以float2，float3，float4
+				float4 worldPos : TEXCOORD1; //世界空间下顶点坐标
 			};
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				// Use the build-in funtion to compute the normal in world space
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				
-				o.worldPos = mul(_Object2World, v.vertex);
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				
 				return o;
 			}

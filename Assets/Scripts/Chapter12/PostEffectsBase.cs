@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//编辑器下也能运行
 [ExecuteInEditMode]
+//需要摄像机
 [RequireComponent (typeof(Camera))]
 public class PostEffectsBase : MonoBehaviour {
 
@@ -35,7 +37,8 @@ public class PostEffectsBase : MonoBehaviour {
 
 	// Called when need to create the material used by this effect
 	protected Material CheckShaderAndCreateMaterial(Shader shader, Material material) {
-		if (shader == null) {
+        //检查shader的可用性
+        if (shader == null) {
 			return null;
 		}
 		
