@@ -5,11 +5,14 @@
 ///  Reference: 	Praun E, Hoppe H, Webb M, et al. Real-time hatching[C]
 ///						Proceedings of the 28th annual conference on Computer graphics and interactive techniques. ACM, 2001: 581.
 ///
+/// 素描渲染
 Shader "Unity Shaders Book/Chapter 14/Hatching" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
+		//纹理的平铺系数，_TileFactor越大，模型上的素描线条越密
 		_TileFactor ("Tile Factor", Float) = 1
 		_Outline ("Outline", Range(0, 1)) = 0.1
+		//_Hatch0至_Hatch5对应了渲染时使用的6张素描纹理，它们的线条密度依次增大
 		_Hatch0 ("Hatch 0", 2D) = "white" {}
 		_Hatch1 ("Hatch 1", 2D) = "white" {}
 		_Hatch2 ("Hatch 2", 2D) = "white" {}
@@ -21,6 +24,7 @@ Shader "Unity Shaders Book/Chapter 14/Hatching" {
 	SubShader {
 		Tags { "RenderType"="Opaque" "Queue"="Geometry"}
 		
+		//由于素描风格往往也需要在物体周围渲染轮廓线，因此我们直接使用14.1节中渲染轮廓线的Pass
 		UsePass "Unity Shaders Book/Chapter 14/Toon Shading/OUTLINE"
 		
 		Pass {
@@ -57,28 +61,34 @@ Shader "Unity Shaders Book/Chapter 14/Hatching" {
 			struct v2f {
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
+				//由于一共声明了6张纹理，这意味着需要6个混合权重，我们把它们存储在两个fixed3类型的变量,减少寄存器优化
+				//一般的优化就是用fixed3等存储多个数据
 				fixed3 hatchWeights0 : TEXCOORD1;
 				fixed3 hatchWeights1 : TEXCOORD2;
-				float3 worldPos : TEXCOORD3;
-				SHADOW_COORDS(4)
+				float3 worldPos : TEXCOORD3; //世界坐标
+				SHADOW_COORDS(4)//声明了阴影纹理的采样坐标,为什么是4，是按照上面TEXCORRD依次排列下来
 			};
 			
 			v2f vert(a2v v) {
 				v2f o;
 				
 				o.pos = UnityObjectToClipPos(v.vertex);
-				
+				//用_TileFactor得到了纹理采样坐标
 				o.uv = v.texcoord.xy * _TileFactor;
 				
+				//计算逐顶点光照
 				fixed3 worldLightDir = normalize(WorldSpaceLightDir(v.vertex));
 				fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);
+				//使用世界空间下的光照方向和法线方向得到漫反射系数diff
 				fixed diff = max(0, dot(worldLightDir, worldNormal));
 				
+				//权重值初始化为0
 				o.hatchWeights0 = fixed3(0, 0, 0);
 				o.hatchWeights1 = fixed3(0, 0, 0);
 				
 				float hatchFactor = diff * 7.0;
 				
+				//把[0, 7]的区间均匀划分为7个子区间，通过判断hatchFactor所处的子区间来计算对应的纹理混合权重
 				if (hatchFactor > 6.0) {
 					// Pure white, do nothing
 				} else if (hatchFactor > 5.0) {
@@ -100,27 +110,33 @@ Shader "Unity Shaders Book/Chapter 14/Hatching" {
 					o.hatchWeights1.z = 1.0 - o.hatchWeights1.y;
 				}
 				
+				//计算了顶点的世界坐标
 				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-				
+				//阴影纹理的采样坐标
 				TRANSFER_SHADOW(o);
 				
 				return o; 
 			}
 			
-			fixed4 frag(v2f i) : SV_Target {			
+			fixed4 frag(v2f i) : SV_Target {		
+				//当得到了6六张纹理的混合权重后，我们对每张纹理进行采样并和它们对应的权重值相乘得到每张纹理的采样颜色	
 				fixed4 hatchTex0 = tex2D(_Hatch0, i.uv) * i.hatchWeights0.x;
 				fixed4 hatchTex1 = tex2D(_Hatch1, i.uv) * i.hatchWeights0.y;
 				fixed4 hatchTex2 = tex2D(_Hatch2, i.uv) * i.hatchWeights0.z;
 				fixed4 hatchTex3 = tex2D(_Hatch3, i.uv) * i.hatchWeights1.x;
 				fixed4 hatchTex4 = tex2D(_Hatch4, i.uv) * i.hatchWeights1.y;
 				fixed4 hatchTex5 = tex2D(_Hatch5, i.uv) * i.hatchWeights1.z;
+				//白在渲染中的贡献度，这是通过从1中减去所有6张纹理的权重来得到的。
+				//这是因为素描中往往有留白的部分，因此我们希望在最后的渲染中光照最亮的部分是纯白色的
 				fixed4 whiteColor = fixed4(1, 1, 1, 1) * (1 - i.hatchWeights0.x - i.hatchWeights0.y - i.hatchWeights0.z - 
 							i.hatchWeights1.x - i.hatchWeights1.y - i.hatchWeights1.z);
-				
+				//混合6个采样颜色和白
 				fixed4 hatchColor = hatchTex0 + hatchTex1 + hatchTex2 + hatchTex3 + hatchTex4 + hatchTex5 + whiteColor;
 				
+				//得到阴影值atten
 				UNITY_LIGHT_ATTENUATION(atten, i, i.worldPos);
-								
+
+				//阴影值，6个采样色与白，模型颜色混合				
 				return fixed4(hatchColor.rgb * _Color.rgb * atten, 1.0);
 			}
 			

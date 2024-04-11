@@ -12,8 +12,8 @@ public class FogWithDepthTexture : PostEffectsBase {
 			return fogMaterial;
 		}  
 	}
-
-	private Camera myCamera;
+    //获取摄像机的相关参数，如近裁剪平面的距离、FOV等，同时还需要获取摄像机在世界空间下的前方、上方和右方等方向
+    private Camera myCamera;
 	public Camera camera {
 		get {
 			if (myCamera == null) {
@@ -33,17 +33,19 @@ public class FogWithDepthTexture : PostEffectsBase {
 			return myCameraTransform;
 		}
 	}
-
-	[Range(0.0f, 3.0f)]
+    //雾的浓度
+    [Range(0.0f, 3.0f)]
 	public float fogDensity = 1.0f;
-
-	public Color fogColor = Color.white;
-
-	public float fogStart = 0.0f;
-	public float fogEnd = 2.0f;
+    //雾的颜色
+    public Color fogColor = Color.white;
+    //雾效的起始高度
+    public float fogStart = 0.0f;
+    //雾效的终止高度
+    public float fogEnd = 2.0f;
 
 	void OnEnable() {
-		camera.depthTextureMode |= DepthTextureMode.Depth;
+        //获取摄像机的深度纹理,设置摄像机模式
+        camera.depthTextureMode |= DepthTextureMode.Depth;
 	}
 	
 	void OnRenderImage (RenderTexture src, RenderTexture dest) {
@@ -76,7 +78,8 @@ public class FogWithDepthTexture : PostEffectsBase {
 			bottomRight.Normalize();
 			bottomRight *= scale;
 
-			frustumCorners.SetRow(0, bottomLeft);
+            //近裁剪平面的四个角对应的向量，并把它们存储在一个矩阵类型的变量
+            frustumCorners.SetRow(0, bottomLeft);
 			frustumCorners.SetRow(1, bottomRight);
 			frustumCorners.SetRow(2, topRight);
 			frustumCorners.SetRow(3, topLeft);

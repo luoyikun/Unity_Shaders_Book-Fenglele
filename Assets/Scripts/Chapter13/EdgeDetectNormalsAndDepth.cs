@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+//边缘检测使用法相与深度图
 public class EdgeDetectNormalsAndDepth : PostEffectsBase {
 
 	public Shader edgeDetectShader;
@@ -11,25 +11,28 @@ public class EdgeDetectNormalsAndDepth : PostEffectsBase {
 			return edgeDetectMaterial;
 		}  
 	}
-
-	[Range(0.0f, 1.0f)]
+    //边缘线强度
+    [Range(0.0f, 1.0f)]
 	public float edgesOnly = 0.0f;
 
 	public Color edgeColor = Color.black;
 
 	public Color backgroundColor = Color.white;
 
-	public float sampleDistance = 1.0f;
-
+    //采样距离，sampleDistance值越大，描边越宽
+    public float sampleDistance = 1.0f;
+    //深度灵敏度，如果很大，即使很小的变化也会形成一条边
 	public float sensitivityDepth = 1.0f;
-
+    //法线灵敏度
 	public float sensitivityNormals = 1.0f;
 	
 	void OnEnable() {
-		GetComponent<Camera>().depthTextureMode |= DepthTextureMode.DepthNormals;
+        //获取摄像机的深度+法线纹理，我们在脚本的OnEnable函数中设置摄像机的相应状态
+        GetComponent<Camera>().depthTextureMode |= DepthTextureMode.DepthNormals;
 	}
 
-	[ImageEffectOpaque]
+    //指定相机渲染目标的 Alpha 通道是否为不透明
+    [ImageEffectOpaque]
 	void OnRenderImage (RenderTexture src, RenderTexture dest) {
 		if (material != null) {
 			material.SetFloat("_EdgeOnly", edgesOnly);
