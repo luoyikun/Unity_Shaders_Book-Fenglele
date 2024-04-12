@@ -8,7 +8,7 @@ public class BurnHelper : MonoBehaviour {
 	[Range(0.01f, 1.0f)]
 	public float burnSpeed = 0.3f;
 
-	private float burnAmount = 0.0f;
+	public float burnAmount = 0.0f;
 
 	// Use this for initialization
 	void Start () {
@@ -28,7 +28,8 @@ public class BurnHelper : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		burnAmount = Mathf.Repeat(Time.time * burnSpeed, 1.0f);
+        //返回值为 x 除以 length 的余数。这里相当于只保留小数部分
+        burnAmount = Mathf.Repeat(Time.time * burnSpeed, 1.0f);
 		material.SetFloat("_BurnAmount", burnAmount);
 	}
 }
